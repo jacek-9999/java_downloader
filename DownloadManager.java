@@ -146,14 +146,133 @@ private void actionExit() {
 
 //Dodanie nowego pliku.
 private void actionAdd() {
-	
+	URL verifiedUrl = veryfyUrl(addTextField.getText());
+	if (verifiedUrl != null) {
+	tableModel.addDownload(new Download(verifiedUrl));
+	addTextField.setText(""); //zresetowanie pola dodawania
+	} else {
+	JOptionPane.showMessageDialog(this,
+			"Bledny adres URL", "Blad", 
+			JOptionPane.ERROR_MESSAGE); 
+	}
 }
 
+//Weryfilacja adresu URL. 
+private URL verifyUrl(String url) {
+	//Tylko adresy HTTP.
+	if (!url.toLoweCase().startWith("http://"))
+		retutn null;
+	//Weryfikacja formatu URL.
+	URL verifiedUrl = null; 
+	try {
+		verifiedUrl = new URL(url);
+	}	catch (exception e) {
+		return null; 
 
+		return verifiedUrl; 
+	}
+	//Upewnienie sie ze adres URL wskazuje na plik. 
+	if (verifiedUrl.getFile().length() < 2)
+		return null;
+	return verifiedUrl;
+}
+//Wywolywane przy zmianie zaznaczonego wiersza. 
+private void tableSelectionChanged() {
+	/*Usuniecie opcji powiadamiania z ostatnio zaznaczonego wiersza*/
+	if (selectedDownload != null)
+		selectedDownload.deleteObserwer(DownloadManager.this);
 
+	/*Jesli nie jest to usuwanie wiersza,
+	 ustaw otrzymywanie powiadomien z tego wiersza*/
+	if (!clearing && table.getSelectedRow() > -1) {
+		selectedDownload = 
+			tableModel.getDownload(table.getSelectedRow());
+		selectedDownload.addObserver(DownloadManager.this);
+		updateButtons();
+	}
+}
 
+//Wstrzymanie wybranego pliku. 
+private void actionPause() {
+	selectedDownload.pause();
+	updateButtons();
+}
 
+//Wznowienie pobierania pliku. 
+private void actionResume() {
+	selectedDownload.resume();
+	updateButtons();
+}
+//Anulowanie pobierania.
+private void actionCancel() {
+	selectedDownload.cancel();
+	updateButtons();
+}
+//Usuniecie pobierania. 
+private void actionClear() {
+	clearing = true; 
+	tableModel.clearDownload(table.getSelectedRow());
+	clearing = false; 
+	selectedDownload = null; 
+	updateButtons(); 
+}
+/*Aktualizacja stanu przyciskow w zaleznosci od stanu zaznaczonego pobierania*/
+private void updateButtons() {
+if (selectedDownload != null) {
+	int status = selectedDownload.getStatus(); 
+	switch (status) {
+		case Download.DOWNLOADING:
+		pauseButton.setEnabled(true);
+		resumeButton.setEnabled(false); 
+		cancelButton.setEnabled(true);
+		clearButton.setEnabled(false); 
+		break; 
+		case Download.PAUSED:
+		pauseButton.setEnabled(false);
+		resumeButton.setEnabled(true); 
+		cancelButton.setEnabled(true);
+		clearButton.setEnabled(false); 
+		break; 
+		case Download.ERROR:
+		pauseButton.setEnabled(false);
+		resumeButton.setEnabled(true); 
+		cancelButton.setEnabled(false);
+		clearButton.setEnabled(true); 
+		break; 
+		default: //CALY lub ANULOWANY
+		pauseButton.setEnabled(false);
+		resumeButton.setEnabled(false); 
+		cancelButton.setEnabled(false);
+		clearButton.setEnabled(true); 
+	}
+} else {
+	//Nie jest zaznaczone zadne pobieranie. 
+		pauseButton.setEnabled(false);
+		resumeButton.setEnabled(false); 
+		cancelButton.setEnabled(false);
+		clearButton.setEnabled(false); 
+	}
+}
+/*Aktualizacja po otrzymaniu informacji o dowolnych zmianach w klasie Download*/
 
+public void update(Observable o, Object arg) {
+//Aktualizacja przyciskow w przypadku zmiany zaznaczonego pobierania. 
+	if (selectedDownload != null && selectedDownload.equals(0))
+		SwingUtilities.invoke(new Runnable(){
+		public void run() {
+			updateButtons();
+		}
+		});
+}
+//Uruchomienie programu. 
+public static void main(Stringp[] args) {
+	SwingUtilities.invokeLater(new Runnable(){
+		public void run() {
+			DownloadManager manager = new DownloadManager();
+			manager.setVisible(true);
+	}
+	});
+}
 
 
 

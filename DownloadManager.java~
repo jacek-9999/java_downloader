@@ -139,6 +139,15 @@ public class DownloadManager extends JFrame
 	getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 }
 
+//Wyjscie z programu.
+private void actionExit() {
+	System.exit(0);
+}
+
+//Dodanie nowego pliku.
+private void actionAdd() {
+	
+}
 
 
 
